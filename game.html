@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQLMAX — Challenge</title>
+  <meta name="description" content="Write SQL queries to solve challenges and learn Chapter 3 content.">
+
+  <!-- CodeMirror -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/game.css">
+
+  <style>
+    /* Additional adjustments for dracula theme in our UI */
+    .CodeMirror { background: #1E1E3F !important; color: #F8F8F2 !important; }
+    .CodeMirror-gutters { background: #16162E !important; border-right: 1px solid rgba(255,255,255,0.06) !important; }
+    .CodeMirror-linenumber { color: #555577 !important; }
+    .CodeMirror-cursor { border-left: 2px solid #F72585 !important; }
+    .CodeMirror-selected { background: rgba(124,58,237,0.3) !important; }
+    .CodeMirror-activeline-background { background: rgba(255,255,255,0.03) !important; }
+    .cm-keyword { color: #FF79C6 !important; font-weight: 600 !important; }
+    .cm-string  { color: #F1FA8C !important; }
+    .cm-number  { color: #BD93F9 !important; }
+    .cm-comment { color: #6272A4 !important; font-style: italic; }
+    .cm-operator { color: #FF79C6 !important; }
+    .cm-builtin { color: #8BE9FD !important; }
+  </style>
+</head>
+<body data-page="game" class="game-page">
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- HUD -->
+  <header class="hud">
+    <button class="hud-btn" id="btn-back">← Map</button>
+    <div class="hud-logo">SQLMAX</div>
+    <div class="hud-xp">
+      <span id="level-badge">LVL 1</span>
+      <div class="xp-bar-track"><div id="xp-bar-fill"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <span id="level-title" style="font-size:11px; color:var(--text-secondary);">SELECT Novice</span>
+  </header>
+
+  <!-- Game layout -->
+  <div class="game-layout">
+
+    <!-- ── LEFT: Task Panel ── -->
+    <aside class="task-panel">
+      <!-- Task Header -->
+      <div class="task-header">
+        <div class="task-header-top">
+          <div class="task-level-name" id="level-title-game">Level</div>
+          <span id="sublevel-badge">🟢</span>
+          <span id="task-difficulty" class="difficulty-badge difficulty-easy">EASY</span>
+          <span class="task-xp-badge" id="task-xp-container">
+            ⭐ <span id="task-xp">+50 XP</span>
+          </span>
+        </div>
+        <h2 id="task-title">Loading challenge...</h2>
+        <div class="sublevel-nav">
+          <button class="sublevel-nav-btn" id="btn-sublevel-prev"
+                  onclick="Game.jumpToSublevel(Game.currentSublevelIndex - 1)"
+                  title="Previous challenge">‹</button>
+          <div id="sublevel-dots"></div>
+          <span class="sublevel-counter">
+            <span id="sublevel-current">1</span>/<span id="sublevel-total">1</span>
+          </span>
+          <button class="sublevel-nav-btn" id="btn-sublevel-next"
+                  onclick="Game.jumpToSublevel(Game.currentSublevelIndex + 1)"
+                  title="Next challenge (complete current first)">›</button>
+        </div>
+      </div>
+
+      <!-- Task Body -->
+      <div class="task-body">
+        <!-- ── TUTORIAL CARD ─────────────────────────────── -->
+        <div id="tutorial-card" class="tutorial-card">
+
+          <!-- Section: Concept -->
+          <div class="tutorial-section">
+            <div class="tutorial-section-label">📖 Concept</div>
+            <p class="tutorial-concept-text"></p>
+          </div>
+
+          <!-- Section: Syntax -->
+          <div class="tutorial-section">
+            <div class="tutorial-section-label">🔤 Syntax</div>
+            <pre class="tutorial-syntax-code"></pre>
+          </div>
+
+          <!-- Section: Example -->
+          <div class="tutorial-section">
+            <div class="tutorial-section-label">💡 Example</div>
+            <pre class="tutorial-example-query"></pre>
+            <div class="tutorial-example-note">
+              <span class="tutorial-note-icon">📝</span>
+              <span class="tutorial-example-note-text"></span>
+            </div>
+          </div>
+
+          <!-- Toggle button -->
+          <button class="tutorial-toggle-btn" onclick="
+            const body = this.closest('.tutorial-card').querySelector('.tutorial-section:not(.always-show)');
+            const card = this.closest('.tutorial-card');
+            card.classList.toggle('tutorial-collapsed');
+            this.textContent = card.classList.contains('tutorial-collapsed') ? '▶ Show Theory' : '▼ Hide Theory';
+          ">▼ Hide Theory</button>
+        </div>
+
+        <!-- DIVIDER -->
+        <div class="challenge-divider">
+          <span>📋 YOUR CHALLENGE</span>
+        </div>
+
+        <!-- Concept badge -->
+        <div style="margin-bottom:10px;">
+          <span style="font-size:10px;color:var(--color-blue);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Concept: </span>
+          <span id="task-concept" style="font-size:11px;color:var(--text-secondary);"></span>
+        </div>
+
+        <!-- Narrative -->
+        <p class="task-narrative" id="task-narrative">Loading...</p>
+
+        <!-- Task question -->
+        <div class="task-question">
+          <div id="task-body">Write a query to complete this challenge.</div>
+        </div>
+
+        <!-- Schema reference (collapsible) -->
+        <div class="schema-toggle" onclick="this.nextElementSibling.classList.toggle('visible'); this.querySelector('.toggle-arrow').textContent = this.nextElementSibling.classList.contains('visible') ? '▲' : '▼';">
+          <span>📊 View Table Schema</span>
+          <span class="toggle-arrow">▼</span>
+        </div>
+        <div class="schema-table-info" id="schema-info">Loading schema info...</div>
+      </div>
+
+      <!-- Hints Section -->
+      <div class="hints-section">
+        <div class="hints-label">💡 Hints</div>
+        <div id="hint-display"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div id="feedback-area"></div>
+
+      <!-- Action Buttons -->
+      <div style="padding:16px 20px; display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--border-color); margin-top:auto;">
+        <button class="btn btn-hint" id="btn-hint">💡 Hint</button>
+        <button class="btn btn-solution" id="btn-solution">👁️ Show Solution</button>
+      </div>
+    </aside>
+
+    <!-- ── RIGHT: Editor + Output ── -->
+    <div class="editor-output-panel">
+
+      <!-- Editor Section -->
+      <div class="editor-section">
+        <div class="editor-toolbar">
+          <span class="editor-lang-badge">SQL</span>
+          <span style="font-size:12px; color:var(--text-muted);">Write your query below</span>
+          <button class="btn btn-run" id="btn-run">▶ Run Query</button>
+          <span class="editor-shortcut"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</span>
+        </div>
+        <div class="editor-wrapper">
+          <textarea id="sql-editor">-- Write your SQL here</textarea>
+        </div>
+      </div>
+
+      <!-- Output Section -->
+      <div class="output-section">
+        <div class="output-toolbar">
+          <span class="output-label">📊 Output</span>
+          <div class="output-status" id="output-status"></div>
+        </div>
+        <div id="output-container">
+          <div class="output-placeholder">
+            <div class="placeholder-icon">▶️</div>
+            <div>Click <strong>Run Query</strong> to see results</div>
+            <div class="hint-text">Shortcut: Ctrl+Enter (Cmd+Enter on Mac)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Complete Modal -->
+  <div id="level-complete-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-trophy">🏆</div>
+      <div class="modal-title">Level Complete!</div>
+      <div class="modal-subtitle" id="modal-level-name">The City Filter</div>
+      <div class="modal-stats">
+        <div class="modal-stat">
+          <div class="modal-stat-num" id="modal-xp-total">0</div>
+          <div class="modal-stat-label">Total XP</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-num" id="modal-player-title" style="font-size:13px;">SELECT Novice</div>
+          <div class="modal-stat-label">Your Rank</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="btn-modal-continue" style="min-width:140px;">← Back to Map</button>
+        <button class="btn btn-primary" id="btn-modal-next" style="min-width:140px;">Next Level →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script src="data/schemas/ecommerce.js"></script>
+  <script src="data/schemas/healthcare.js"></script>
+  <script src="data/schemas/university.js"></script>
+  <script src="data/schemas/dml_world.js"></script>
+  <script src="data/worlds.js"></script>
+  <script src="data/levels/world1_ecommerce.js"></script>
+  <script src="data/levels/world2_healthcare.js"></script>
+  <script src="data/levels/world3_university.js"></script>
+  <script src="data/levels/world4_dml.js"></script>
+  <script src="data/levels/world5_ddl.js"></script>
+
+  <!-- sql.js (WebAssembly SQLite) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+
+  <!-- CodeMirror -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+
+  <!-- Game Scripts -->
+  <script src="js/engine.js"></script>
+  <script src="js/validator.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- Schema info helper: runs after DOMContentLoaded so Game is ready -->
+  <script>
+    function populateSchemaInfo(schemaName) {
+      const info = {
+        ecommerce:  'customers (customer_id, name, mobile, city, email, join_date)\nproducts (product_id, name, category, price, stock)\norders (order_id, customer_id, order_date, status)\norder_items (item_id, order_id, product_id, quantity, unit_price)\npayment_methods (payment_id, order_id, method, card_type, paid_amount)',
+        healthcare: 'departments (dept_id, dept_name, location)\ndoctors (doctor_id, name, specialization, city, contact, dept_id)\npatients (patient_id, name, age, gender, contact, city)\nappointments (appt_id, doctor_id, patient_id, appt_date, diagnosis)',
+        university: 'department (dept_name, building, budget)\ninstructor (ID, name, dept_name, salary)\nstudent (ID, name, dept_name, tot_cred)\ncourse (course_id, title, dept_name, credits)\nsection (course_id, sec_id, semester, year, building)\nteaches (ID, course_id, sec_id, semester, year)\ntakes (ID, course_id, sec_id, semester, year, grade)',
+        dml:        'employees (emp_id, name, department, salary, hire_date, city)\nprojects (project_id, title, budget, dept, status)\nassignments (assign_id, emp_id, project_id, role, hours)',
+      };
+      const el = document.getElementById('schema-info');
+      if (el) el.textContent = info[schemaName] || 'Schema info not available';
+    }
+
+    // Patch Game.startLevel to populate schema info after level loads
+    const _origStartLevel = Game.startLevel.bind(Game);
+    Game.startLevel = async function(worldId, levelId) {
+      const result = await _origStartLevel(worldId, levelId);
+      if (Game.currentWorld) populateSchemaInfo(Game.currentWorld.schema);
+      return result;
+    };
+  </script>
+</body>
+</html>

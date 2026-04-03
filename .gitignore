@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+*.egg-info/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local dev only — not needed on GitHub Pages
+serve.py
+
+# Study PDFs — large files, don't commit to repo
+*.pdf
+
+# Node (if ever used)
+node_modules/
+package-lock.json

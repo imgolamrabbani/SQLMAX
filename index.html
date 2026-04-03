@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQLMAX — Gamified SQL Learning for Chapter 3</title>
+  <meta name="description"
+    content="Master SQL Chapter 3 queries with SQLMAX — a gamified SQL learning game with real in-browser query execution, live results, and CT exam prep challenges.">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/map.css">
+</head>
+
+<body data-page="map" class="map-body">
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- HUD -->
+  <header class="hud">
+    <div class="hud-logo" onclick="window.location.reload()">SQLMAX</div>
+    <div class="hud-xp">
+      <span id="level-badge">LVL 1</span>
+      <div class="xp-bar-track">
+        <div id="xp-bar-fill"></div>
+      </div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <span id="level-title" style="font-size:11px; color:var(--text-secondary);">SELECT Novice</span>
+    <button class="hud-btn"
+      onclick="if(confirm('Reset all progress?')) { Progress.resetAll(); location.reload(); }">Reset</button>
+  </header>
+
+  <!-- Hero -->
+  <main class="map-page">
+    <section class="hero">
+      <div class="hero-tagline">⚔️ CT Chapter 3 Prep &nbsp;·&nbsp; SQL Quest</div>
+      <h1 class="hero-title">
+        <span class="t1">SQLMAX</span>
+        <span class="t2">QUEST</span>
+      </h1>
+      <p class="hero-sub">
+        Learn SQL by playing. Write real queries, see real results — and crush your CT exam.
+        All 4 worlds feature actual past exam questions.
+      </p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num">5</div>
+          <div class="hero-stat-label">Worlds</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">17+</div>
+          <div class="hero-stat-label">Levels</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">40+</div>
+          <div class="hero-stat-label">Challenges</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">100%</div>
+          <div class="hero-stat-label">In-Browser</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Player Bar -->
+    <div style="padding: 0 24px; max-width:600px; margin: 0 auto 48px; position:relative; z-index:1;">
+      <div class="player-bar">
+        <div class="player-avatar">🧙</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:14px;" id="player-title-display">SELECT Novice</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;" id="player-xp-display">0 XP — Start
+            your journey!</div>
+        </div>
+        <div style="font-family:var(--font-pixel); font-size:10px; color:var(--color-gold);" id="player-level-display">
+          LVL 1</div>
+      </div>
+    </div>
+
+    <!-- Select World -->
+    <div style="padding: 0 24px; position:relative; z-index:1">
+      <p class="section-title">Choose Your <strong>World</strong></p>
+    </div>
+    <div id="worlds-grid"><!-- worlds injected by JS --></div>
+
+    <!-- Quick Cheat Sheet -->
+    <section class="cheat-sheet">
+      <p class="section-title">📜 Chapter 3 <strong>Command Reference</strong></p>
+      <div class="cheatsheet-grid">
+        <div class="cheatsheet-card">
+          <h3>🔵 Core Fetchers</h3>
+          <code>SELECT col1, col2</code>
+          <code>SELECT DISTINCT col</code>
+          <code>FROM table_name</code>
+          <code>WHERE condition</code>
+        </div>
+        <div class="cheatsheet-card">
+          <h3>🟡 Matchers</h3>
+          <code>LIKE 'A%'</code>
+          <code>LIKE '_a%'</code>
+          <code>BETWEEN x AND y</code>
+          <code>IS NULL / IS NOT NULL</code>
+          <code>IN (1, 2, 3)</code>
+        </div>
+        <div class="cheatsheet-card">
+          <h3>🟢 Aggregates</h3>
+          <code>COUNT(*)</code>
+          <code>SUM(col) / AVG(col)</code>
+          <code>MAX(col) / MIN(col)</code>
+          <code>GROUP BY col</code>
+          <code>HAVING condition</code>
+          <code>ORDER BY col DESC</code>
+        </div>
+        <div class="cheatsheet-card">
+          <h3>🔴 Set Operations</h3>
+          <code>UNION</code>
+          <code>INTERSECT</code>
+          <code>EXCEPT</code>
+        </div>
+        <div class="cheatsheet-card">
+          <h3>🟣 DML</h3>
+          <code>INSERT INTO t VALUES</code>
+          <code>DELETE FROM t WHERE</code>
+          <code>UPDATE t SET col=val WHERE</code>
+        </div>
+        <div class="cheatsheet-card">
+          <h3>🔗 Subqueries</h3>
+          <code>WHERE col IN (SELECT ...)</code>
+          <code>WHERE col = (SELECT MAX ...)</code>
+          <code>WHERE col > ALL (SELECT ...)</code>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- World Modal -->
+  <div id="world-modal" class="modal-overlay" onclick="if(event.target===this) closeWorldModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="world-modal-header">
+        <h2 id="world-modal-title">World</h2>
+        <p id="world-modal-desc"></p>
+      </div>
+      <div id="world-levels-list"></div>
+      <button class="btn btn-ghost" style="width:100%; margin-top:16px;" onclick="closeWorldModal()">← Back to
+        Map</button>
+    </div>
+  </div>
+
+  <!-- Scripts: data first, then logic -->
+  <script src="data/schemas/ecommerce.js"></script>
+  <script src="data/schemas/healthcare.js"></script>
+  <script src="data/schemas/university.js"></script>
+  <script src="data/schemas/dml_world.js"></script>
+  <script src="data/worlds.js"></script>
+  <script src="data/levels/world1_ecommerce.js"></script>
+  <script src="data/levels/world2_healthcare.js"></script>
+  <script src="data/levels/world3_university.js"></script>
+  <script src="data/levels/world4_dml.js"></script>
+  <script src="data/levels/world5_ddl.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+
+  <script>
+    // Update player display on map
+    document.addEventListener('DOMContentLoaded', () => {
+      const state = Progress.getState();
+      const info = Progress.getPlayerLevel(state.xp);
+      const ptd = document.getElementById('player-title-display');
+      const pxd = document.getElementById('player-xp-display');
+      const pld = document.getElementById('player-level-display');
+      if (ptd) ptd.textContent = info.title;
+      if (pxd) pxd.textContent = `${state.xp} XP${info.next ? ` · ${info.next - state.xp} XP to next level` : ' · MAX LEVEL!'}`;
+      if (pld) pld.textContent = `LVL ${info.level}`;
+    });
+  </script>
+</body>
+
+</html>
