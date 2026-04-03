@@ -24,8 +24,6 @@ __pycache__/
 *.log
 npm-debug.log*
 
-# Local dev only — not needed on GitHub Pages
-serve.py
 
 # Study PDFs — large files, don't commit to repo
 *.pdf

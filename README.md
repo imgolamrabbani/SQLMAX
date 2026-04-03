@@ -47,25 +47,24 @@ SELECT *?      → ❌ Rejected. Select only what the task asks for.
 
 ## 🚀 Play It
 
-### Option A — GitHub Pages (recommended)
-Just visit the live link above. No setup needed.
+### Option A — GitHub Pages ✅ (No setup needed)
+Just visit: **[https://imgolamrabbani.github.io/SQLMAX/](https://imgolamrabbani.github.io/SQLMAX/)**
+
+---
 
 ### Option B — Run locally
 ```bash
-# Clone the repo
-git clone https://github.com/your-username/SQLMAX.git
+# 1. Clone the repo
+git clone https://github.com/imgolamrabbani/SQLMAX.git
 cd SQLMAX
 
-# Run the local server (needed for sql.js WASM)
+# 2. Start the local server (included in the repo)
 python3 serve.py
 
 # Opens automatically at http://localhost:3000/index.html
 ```
 
-> ⚠️ **Why the server?** sql.js loads a `.wasm` file which browsers block when opened as a local `file://` URL. The Python server takes 1 second to start and fixes this.
-
-### Option C — Direct `index.html` (map only)
-The map page works without a server. The game page needs the server for the SQL engine.
+> ⚠️ **Why the local server?** The SQL engine uses WebAssembly (`.wasm`), which browsers block when opened as a raw `file://` URL. The included `serve.py` fixes this with one command. You don't need this on GitHub Pages — it works out of the box there.
 
 ---
 
