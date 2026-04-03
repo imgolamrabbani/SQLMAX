@@ -1,106 +1,97 @@
-// World 0 / World 5 — DDL Workshop (new University schema)
-// Topics: CREATE TABLE, data types, primary key, foreign key, not null, check,
-//         unique, drop table, alter table — all from Chapter 3 DDL section
-// This world uses the UNIVERSITY schema for reading queries,
-// and DDL challenges are verified by running a SELECT on the created tables.
+// World 5 — DDL Workshop (University schema)
 const WORLD5_LEVELS = [
   {
-    id: 'w5l1', title: 'DDL Workshop', icon: '🏗️', xpReward: 200,
+    id: 'w5l1', title: 'Schema Architect', icon: '🏗️', xpReward: 200,
     sublevels: [
       {
-        id: 'w5l1s1', title: 'CREATE TABLE basics', badge: '🔵',
-        difficulty: 'MEDIUM', xp: 60, concept: 'CREATE TABLE + data types',
+        id: 'w5l1s1', title: 'CREATE TABLE', badge: '🟢',
+        difficulty: 'MEDIUM', xp: 65, concept: 'CREATE TABLE',
         schema: 'university',
         tutorial: {
-          concept: 'CREATE TABLE defines a new table. You must specify column names and their data types. SQL standard types: CHAR(n), VARCHAR(n), INT, SMALLINT, NUMERIC(p,d), REAL, FLOAT(n), DATE, TIME, TIMESTAMP.',
-          syntax: "CREATE TABLE table_name (\n  col1  datatype,\n  col2  datatype,\n  col3  datatype\n);\n\n-- Common types:\n-- TEXT / VARCHAR(n) — variable-length string\n-- INTEGER / INT     — whole numbers\n-- REAL / FLOAT      — decimals\n-- DATE              — e.g. '2024-01-15'",
-          example: { query: "CREATE TABLE student (\n  ID        VARCHAR(5),\n  name      VARCHAR(20),\n  dept_name VARCHAR(20),\n  tot_cred  NUMERIC(3,0)\n);", note: 'Notice: no constraints yet. All columns accept NULL values by default.' }
+          concept: 'CREATE TABLE defines a new table. You specify each column with a name and a data type. Common types: INT or INTEGER (whole numbers), REAL (decimals), TEXT or VARCHAR(n) (strings), DATE (date only).',
+          syntax: "CREATE TABLE table_name (\n  col1  DATA_TYPE,\n  col2  DATA_TYPE,\n  col3  DATA_TYPE\n);\n\n-- Types:\n-- INT / INTEGER   → whole numbers\n-- REAL / FLOAT   → decimals\n-- TEXT / VARCHAR → strings\n-- DATE           → date values",
+          example: { query: "CREATE TABLE grade_report (\n  student_id INT,\n  course_id  TEXT,\n  grade      TEXT\n);", note: "Creates a new empty table. Nothing is inserted — just the structure is defined." }
         },
-        narrative: 'Create a simple grade_report table.',
-        task: "CREATE TABLE grade_report (student_id INT, course_id TEXT, grade TEXT). Then SELECT name FROM sqlite_master WHERE type='table' AND name='grade_report';",
+        narrative: 'The registrar needs a new table to store grade reports.',
+        task: 'Create a table named <strong>grade_report</strong> with three columns: <strong>student_id</strong> (integer), <strong>course_id</strong> (text), and <strong>grade</strong> (text). Then verify the table was created by checking the database schema.',
         solution: "CREATE TABLE grade_report (student_id INT, course_id TEXT, grade TEXT); SELECT name FROM sqlite_master WHERE type='table' AND name='grade_report';",
-        isDML: true,
-        hints: ['CREATE TABLE name (col1 type, col2 type, ...)', "Then verify: SELECT name FROM sqlite_master WHERE type='table' AND name='grade_report';", "CREATE TABLE grade_report (student_id INT, course_id TEXT, grade TEXT); SELECT name FROM sqlite_master WHERE type='table' AND name='grade_report';"]
+        isDML: false,
+        hints: ['Use CREATE TABLE, followed by the table name and column definitions in parentheses.', 'Each column needs a name and a data type.', "CREATE TABLE grade_report (student_id INT, course_id TEXT, grade TEXT); SELECT name FROM sqlite_master WHERE type='table' AND name='grade_report';"]
       },
       {
-        id: 'w5l1s2', title: 'NOT NULL constraint', badge: '🟠',
-        difficulty: 'MEDIUM', xp: 65, concept: 'NOT NULL integrity constraint',
+        id: 'w5l1s2', title: 'NOT NULL Constraint', badge: '🟠',
+        difficulty: 'MEDIUM', xp: 65, concept: 'NOT NULL',
         schema: 'university',
         tutorial: {
-          concept: 'NOT NULL is an integrity constraint. It ensures the column can never hold a NULL value. Any INSERT or UPDATE that tries to set that column to NULL will be rejected by the database.',
-          syntax: "CREATE TABLE table (\n  col1 TEXT NOT NULL,\n  col2 INT,           -- allows NULL\n  col3 TEXT NOT NULL  -- disallows NULL\n);",
-          example: { query: "CREATE TABLE instructor (\n  ID        VARCHAR(5) PRIMARY KEY,\n  name      VARCHAR(20) NOT NULL,\n  dept_name VARCHAR(20),\n  salary    NUMERIC(8,2)\n);", note: 'name is NOT NULL — every instructor must have a name. But dept_name and salary can be missing.' }
+          concept: 'NOT NULL prevents a column from ever storing a NULL (missing) value. Adding it forces every INSERT to provide a real value for that column.',
+          syntax: "CREATE TABLE table_name (\n  col1  TEXT    NOT NULL,  -- required!\n  col2  INTEGER,           -- allows NULL\n  col3  REAL    NOT NULL   -- required!\n);\n\n-- NOT NULL at definition time only\n-- Cannot be bypassed by INSERT",
+          example: { query: "CREATE TABLE employee_contacts (\n  emp_id  INT  NOT NULL,\n  phone   TEXT NOT NULL,\n  email   TEXT\n);", note: 'emp_id and phone are mandatory. email is optional (can be NULL).' }
         },
-        narrative: 'Check which columns in the instructor table are NOT NULL.',
-        task: "Run: PRAGMA table_info(instructor); — Look at the 'notnull' column. Show the result (this tells you the constraint info).",
+        narrative: 'Inspect what NOT NULL constraints already exist in the instructor table.',
+        task: 'Examine the column definitions of the <strong>instructor</strong> table and show the constraint information. Look at the <strong>notnull</strong> column — a value of 1 means that column requires a value.',
         solution: 'PRAGMA table_info(instructor);',
         isDML: false,
-        hints: ['PRAGMA table_info(table_name) is SQLite-specific metadata.', 'The notnull column is 1 for NOT NULL, 0 for nullable.', 'PRAGMA table_info(instructor);']
+        hints: ['SQLite has a PRAGMA command that reveals table structure.', "Try: PRAGMA table_info(instructor);", 'PRAGMA table_info(instructor);']
       },
       {
-        id: 'w5l1s3', title: 'PRIMARY KEY', badge: '🟡',
+        id: 'w5l1s3', title: 'PRIMARY KEY', badge: '🔑',
         difficulty: 'MEDIUM', xp: 70, concept: 'PRIMARY KEY constraint',
         schema: 'university',
         tutorial: {
-          concept: 'PRIMARY KEY uniquely identifies each row. It is always NOT NULL. No two rows can have the same primary key value. A table can have only one primary key (but it can span multiple columns).',
-          syntax: "-- Single column PK:\nCREATE TABLE t (\n  id INT PRIMARY KEY,\n  col TEXT\n);\n\n-- Composite PK:\nCREATE TABLE t (\n  col1 TEXT,\n  col2 TEXT,\n  PRIMARY KEY (col1, col2)\n);",
-          example: { query: "CREATE TABLE course (\n  course_id  VARCHAR(8) PRIMARY KEY,\n  title      VARCHAR(50) NOT NULL,\n  dept_name  VARCHAR(20),\n  credits    NUMERIC(2,0)\n);", note: 'course_id is the primary key. No two courses can share an ID.' }
+          concept: 'PRIMARY KEY uniquely identifies each row. It is automatically NOT NULL and UNIQUE. A table can have only one primary key. Composite primary keys span multiple columns.',
+          syntax: "-- Single column PK:\nCREATE TABLE students (\n  student_id INT PRIMARY KEY,\n  name TEXT NOT NULL\n);\n\n-- Composite PK:\nCREATE TABLE enrolment (\n  student_id INT,\n  course_id  TEXT,\n  PRIMARY KEY (student_id, course_id)\n);",
+          example: { query: "PRAGMA table_info(takes);", note: 'The pk column shows which columns form the primary key. pk=1 is the first PK column, pk=2 is second, etc.' }
         },
-        narrative: 'Look at what columns make up the primary key in the takes table.',
-        task: "Run PRAGMA table_info(takes); — the pk column shows which columns form the primary key (1 = first pk column, 2 = second, etc.).",
+        narrative: 'Examine the takes table to understand its composite primary key structure.',
+        task: 'Show the full column information for the <strong>takes</strong> table. Identify which columns form the primary key by looking at the <strong>pk</strong> column in the result.',
         solution: 'PRAGMA table_info(takes);',
         isDML: false,
-        hints: ['PRAGMA table_info shows column metadata.', 'The pk column (last column) shows key membership order.', 'PRAGMA table_info(takes);']
+        hints: ['SQLite stores constraint details in table_info.', 'The pk column value tells you the position in the composite key.', 'PRAGMA table_info(takes);']
       },
       {
-        id: 'w5l1s4', title: 'FOREIGN KEY', badge: '🔴',
-        difficulty: 'HARD', xp: 75, concept: 'FOREIGN KEY — referential integrity',
+        id: 'w5l1s4', title: 'FOREIGN KEY', badge: '🔗',
+        difficulty: 'HARD', xp: 75, concept: 'FOREIGN KEY',
         schema: 'university',
         tutorial: {
-          concept: 'A FOREIGN KEY ensures values in one table exist in another (referential integrity). It prevents "orphan" rows. The referenced column must be a PRIMARY KEY (or UNIQUE) in the other table.',
-          syntax: "CREATE TABLE child (\n  id    INT PRIMARY KEY,\n  parent_id INT,\n  FOREIGN KEY (parent_id) REFERENCES parent(id)\n);\n\n-- parent_id values must exist in parent.id\n-- Cannot insert a child row with a non-existent parent",
-          example: { query: "CREATE TABLE teaches (\n  ID        VARCHAR(5),\n  course_id VARCHAR(8),\n  semester  VARCHAR(6),\n  year      NUMERIC(4,0),\n  PRIMARY KEY (ID, course_id, semester, year),\n  FOREIGN KEY (ID)        REFERENCES instructor(ID),\n  FOREIGN KEY (course_id) REFERENCES course(course_id)\n);", note: 'Both ID and course_id are foreign keys. A teaches row can only reference an existing instructor and course.' }
+          concept: 'FOREIGN KEY enforces referential integrity — a value in child table must exist in the parent table. REFERENCES says which table and column.',
+          syntax: "CREATE TABLE child_table (\n  id         INT PRIMARY KEY,\n  parent_id  INT,\n  FOREIGN KEY (parent_id)\n    REFERENCES parent_table(id)\n);",
+          example: { query: "SELECT instructor.name, department.dept_name\nFROM instructor\nJOIN department\n  ON instructor.dept_name = department.dept_name\nORDER BY dept_name;", note: 'This works because FOREIGN KEY guarantees every instructor.dept_name exists in department.' }
         },
-        narrative: 'List all instructors and the departments they belong to — verify referential integrity works.',
-        task: "Show <strong>name</strong> and <strong>dept_name</strong> from instructor JOIN department ON instructor.dept_name = department.dept_name ORDER BY dept_name.",
-        solution: 'SELECT name, instructor.dept_name FROM instructor JOIN department ON instructor.dept_name = department.dept_name ORDER BY dept_name;',
+        narrative: 'The foreign key between instructor and department ensures data consistency. Demonstrate it by joining them.',
+        task: 'List each instructor\'s <strong>name</strong> alongside their <strong>department name</strong>, sorted alphabetically by department.',
+        solution: 'SELECT instructor.name, department.dept_name FROM instructor JOIN department ON instructor.dept_name = department.dept_name ORDER BY dept_name;',
         isDML: false,
-        hints: ['Use JOIN ... ON for explicit join syntax.', 'Both tables have dept_name — qualify with table name in SELECT.', 'SELECT name, instructor.dept_name FROM instructor JOIN department ON instructor.dept_name = department.dept_name ORDER BY dept_name;']
-      }
-    ]
-  },
-  {
-    id: 'w5l2', title: 'Constraints Deep Dive', icon: '🔒', xpReward: 200,
-    sublevels: [
+        hints: ['Join the instructor and department tables — they share the dept_name column.', 'Sort the result alphabetically by department name.', 'SELECT instructor.name, department.dept_name FROM instructor JOIN department ON instructor.dept_name = department.dept_name ORDER BY dept_name;']
+      },
       {
-        id: 'w5l2s1', title: 'CHECK constraint', badge: '🟣',
-        difficulty: 'HARD', xp: 75, concept: 'CHECK constraint',
+        id: 'w5l1s5', title: 'CHECK & DEFAULT', badge: '✅',
+        difficulty: 'HARD', xp: 75, concept: 'CHECK and DEFAULT',
         schema: 'university',
         tutorial: {
-          concept: 'CHECK adds a domain constraint — each row must satisfy the CHECK predicate. If an INSERT or UPDATE violates it, the operation is rejected. Can reference any columns in the same table.',
-          syntax: "CREATE TABLE table (\n  col1 NUM CHECK (col1 >= 0),\n  col2 TEXT CHECK (col2 IN ('A','B','C'))\n);\n\n-- Or named constraint:\nCONSTRAINT check_name CHECK (condition)",
-          example: { query: "CREATE TABLE section (\n  course_id TEXT,\n  semester  TEXT CHECK (semester IN ('Fall','Winter','Spring','Summer')),\n  year      INT  CHECK (year > 1701 AND year < 2100),\n  PRIMARY KEY (course_id, semester, year)\n);", note: 'semester can only be one of the four allowed values. year must be in a valid range.' }
+          concept: 'CHECK adds a validation rule — INSERTs that violate it are rejected. DEFAULT provides a fallback value when INSERT omits the column.',
+          syntax: "CREATE TABLE table_name (\n  credits INT CHECK (credits >= 0),\n  type    TEXT DEFAULT 'Lecture'\n);\n\n-- CHECK: condition must be TRUE for insert\n-- DEFAULT: used when column is omitted",
+          example: { query: "SELECT name, salary\nFROM instructor\nWHERE salary > 40000\nORDER BY salary ASC;", note: 'Demonstrates querying constrained data — salary has a CHECK constraint in real schemas.' }
         },
-        narrative: 'Find instructors whose salary satisfies being > 40000 (the CHECK rule in our schema).',
-        task: 'Show <strong>name</strong> and <strong>salary</strong> from instructor where salary > 40000 ORDER BY salary ASC.',
+        narrative: 'Audit instructor salaries to confirm they meet the minimum threshold defined by schema constraints.',
+        task: 'List the <strong>name</strong> and <strong>salary</strong> of all instructors whose salary is above <strong>40,000</strong>, sorted from lowest to highest.',
         solution: 'SELECT name, salary FROM instructor WHERE salary > 40000 ORDER BY salary ASC;',
         isDML: false,
-        hints: ['WHERE salary > 40000', 'ORDER BY salary ASC', 'SELECT name, salary FROM instructor WHERE salary > 40000 ORDER BY salary ASC;']
+        hints: ['Filter instructors by salary, then sort the result.', 'Ascending order means smallest first.', 'SELECT name, salary FROM instructor WHERE salary > 40000 ORDER BY salary ASC;']
       },
       {
-        id: 'w5l2s2', title: 'Domains & Defaults', badge: '🔵',
-        difficulty: 'MEDIUM', xp: 65, concept: 'DEFAULT values',
+        id: 'w5l1s6', title: 'Schema Review', badge: '🏆',
+        difficulty: 'HARD', xp: 80, concept: 'Schema-level queries',
         schema: 'university',
         tutorial: {
-          concept: 'A DEFAULT value is automatically used when an INSERT does not specify a value for that column. It is defined as part of the column specification.',
-          syntax: "CREATE TABLE table (\n  col1 TEXT,\n  col2 INT DEFAULT 0,\n  col3 TEXT DEFAULT 'Active'\n);\n\n-- When INSERT omits col2 and col3,\n-- they get 0 and 'Active' respectively.",
-          example: { query: "CREATE TABLE employee (\n  name   TEXT NOT NULL,\n  status TEXT DEFAULT 'active',\n  dept   TEXT\n);", note: "If INSERT INTO employee (name, dept) VALUES ('Ali', 'CS') — status automatically becomes 'active'." }
+          concept: 'After designing a schema, you often need to query across tables to verify it works correctly.',
+          syntax: "-- count sections per semester:\nSELECT semester, COUNT(*)\nFROM section\nGROUP BY semester\nORDER BY COUNT(*) DESC;",
+          example: { query: 'SELECT semester, COUNT(*) AS section_count\nFROM section\nGROUP BY semester\nORDER BY section_count DESC;', note: 'Shows which semesters had the most sections — a useful schema audit.' }
         },
-        narrative: 'Find sections offered in the most common semester in our data.',
-        task: 'Show <strong>semester</strong> and <strong>COUNT(*)</strong> as section_count from section GROUP BY semester ORDER BY section_count DESC.',
+        narrative: 'Final exam prep — audit which semester runs the most sections in the university.',
+        task: 'Count how many sections were offered in each <strong>semester</strong>. Show the semester and the count labelled <strong>section_count</strong>, sorted from the semester with the most sections to the fewest.',
         solution: 'SELECT semester, COUNT(*) AS section_count FROM section GROUP BY semester ORDER BY section_count DESC;',
         isDML: false,
-        hints: ['GROUP BY semester.', 'COUNT(*) per semester, ORDER BY count DESC.', 'SELECT semester, COUNT(*) AS section_count FROM section GROUP BY semester ORDER BY section_count DESC;']
+        hints: ['Group the section table by semester.', 'COUNT(*) gives the number of sections per group.', 'SELECT semester, COUNT(*) AS section_count FROM section GROUP BY semester ORDER BY section_count DESC;']
       }
     ]
   }
