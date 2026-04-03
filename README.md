@@ -2,7 +2,7 @@
 
 > **Master every SQL query from Database Systems Chapter 3 — by actually writing code.**
 
-**Live Demo →** [Play on GitHub Pages](https://your-username.github.io/SQLMAX/)
+**Live Demo →** [Play on GitHub Pages](https://imgolamrabbani.github.io/SQLMAX/)
 
 ---
 
