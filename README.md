@@ -6,7 +6,7 @@
 
 ---
 
-![SQLMAX Banner](assets/images/ui/banner.png)
+
 
 ## What is SQLMAX?
 
